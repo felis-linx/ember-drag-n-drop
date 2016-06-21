@@ -14,6 +14,7 @@ export default Ember.Mixin.create({
 
   transferEffect: 'move',
 
+  classNames: ['draggable'],
   classNameBindings: ['isDragged:is-dragged'],
   isDragged: false,
   

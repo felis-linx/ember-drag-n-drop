@@ -5,6 +5,9 @@ export default Ember.Mixin.create({
   store: Ember.inject.service(),
   dragCoordinator: Ember.inject.service(),
   
+  classNames: ['dropzone'],
+  classNameBindings: ['draggingOver:drag-over'],
+  
   allowDrop: true,
 
   items: null,
@@ -171,7 +174,9 @@ export default Ember.Mixin.create({
     
 //    dragCoordinator.dragStarted(this.get('draggingInstance'));
 
-    Ember.run.schedule('afterRender', this, 'update');
+//    Ember.run.schedule('afterRender', this, 'update');
+    this.update();
+    this.complete();
     
     return this._finishDragging(event);    
   },

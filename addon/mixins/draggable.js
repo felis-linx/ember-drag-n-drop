@@ -9,7 +9,7 @@ export default Ember.Mixin.create({
     return (this.get('allowDrag') && !this.get('suspendDrag') ? true : null );
   }),
 
-  allowDrag: false, // disable drag element by default, redefine to true for allow move this element
+  allowDrag: true, // enable by default, redefine to true for disallow drag this element
   suspendDrag: false, // used for temporary disable dragging
 
   transferEffect: 'move',

@@ -103,12 +103,11 @@ export default Ember.Mixin.create({
     
     // check existence of dragged object among child
     if (this.get(this.childsName).indexOf(object) === -1) {
-      this._addChild(object);
-      return true; // tell that new child was added
+      return this._addChild(object); // tell that new child was added or not
     }
     
     // tell that no child was added and possible suspend dropzone behavior 
-    // in nested elementsfor makeing sorting
+    // in nested elementsfor making sorting
     return false;
   },
   
@@ -124,15 +123,17 @@ export default Ember.Mixin.create({
   
   dragLeave: function(event) {
     
-    if (this.get('draggingOver') !== true || this.isSelf() === true) {
+    if (this.isSelf() === true) {
       return false; //?????? sure?
     }
 /*    
     if (event.dataTransfer.effectAllowed === 'move') {
       return false;
     }
-*/    
-    if (this.get('draggingInstance') !== null) {
+*/
+    if (this.get('draggingOver') === true && this.get('draggingInstance') !== null) {
+      Ember.Logger.info('--- [Dropzone] drag pre-leave in', this.elementId);
+    
       var elRect = this.element.getBoundingClientRect(),
           cX = event.originalEvent.clientX,
           cY = event.originalEvent.clientY,
@@ -140,19 +141,20 @@ export default Ember.Mixin.create({
 
       if (outsideElement) {
         this._dragLeave(event);
+        return false;
       }
 //      event.preventDefault();
 //      return false;
     }
-    return false;
+    return true; //false;
   },
   
   _dragLeave(/*event*/) {
     
-    Ember.Logger.info('--- [Dropzone] drag leave in',this.elementId);
+    Ember.Logger.info('--- [Dropzone] drag leave in',this.elementId, this.get('draggingInstance'));
     this.set('draggingOver', false);
     
-    if (this.get('draggingInstance') === null) {
+    if (this.get('draggingInstance') === null) { //this.get('dragCoordinator.instance')
 //      Ember.Logger.warn('[Dropzone]'+this+' draggingInstance is null');
       return false;
     }
@@ -181,8 +183,7 @@ export default Ember.Mixin.create({
     return this._finishDragging(event);    
   },
   
-  drop: function(event) {
-    
+  drop: function(event) {    
 //    Ember.Logger.info('--- allowDrop', this.get('allowDrop'), 'isAllow', this.isAllowDrop(event));
 //    Ember.Logger.info('--- types '+event.dataTransfer.types, 'allow '+this.allow, '| disallow '+this.disallow);
 
@@ -190,32 +191,25 @@ export default Ember.Mixin.create({
       return true;
     }
     
+//    event.stopPropagation();    
+    event.preventDefault();
+
     Ember.Logger.log('[Dropzone] drop in', this.elementId);
 
+    this._drop();
+    return this._finishDragging(event);
+  },
+  
+  _drop: function() {
     var dragCoordinator = this.get('dragCoordinator'),
         object = dragCoordinator.get('object'),
         instance = dragCoordinator.get('instance'); //this.get('draggingInstance');
 
-    dragCoordinator.dropped(object);
-    
-//    if (instance && instance.isNew()) {
+//    Ember.Logger.log('instance is',instance);
+    if (instance /*&& instance.isNew()*/) {
       instance._dragEnd(event);
-//    }
-/*
-      Ember.Logger.log('In dropped object:');
-      [].forEach.call(event.dataTransfer.types, function(type) { // firefox pleased...
-        Ember.Logger.log('--- ('+type+')', event.dataTransfer.getData(type));
-        if (type === 'type') { //'text/json'
-          data = true;//JSON.parse(event.dataTransfer.getData(type));
-        }
-      });
-      Ember.assert('[Dropzone] empty data in dropped item'+event, data !== null);
-//        this._appendChild(data);
-*/    
-
-//    event.stopPropagation();    
-    event.preventDefault();    
-    return this._finishDragging(event);
+    }
+    dragCoordinator.dropped(object); 
   },
   
   _finishDragging: function(/*event*/) {
@@ -231,6 +225,7 @@ export default Ember.Mixin.create({
     if (this.get('draggingOver') === true /*instance.isNew() === true*/) {
       var dragCoordinator = this.get('dragCoordinator');
       dragCoordinator.set('instance', instance);
+      this.set('draggingInstance', instance)
       Ember.Logger.info('------ addItem new item'+instance,'#', instance.get('content.id'));
       instance._dragStart(dragCoordinator.get('event'));
     }
@@ -287,6 +282,7 @@ export default Ember.Mixin.create({
     Ember.assert('[Dropzone] can`t peek childs in '+this.elementId, Ember.typeOf(childs) === 'instance');
 
     childs.addObject(element);    
-    Ember.Logger.info('[Dropzone]', this.elementId, 'add new '+element.get('type'), element.id);    
+    Ember.Logger.info('[Dropzone]', this.elementId, 'add new '+element.get('type'), element.id);
+    return true;
   }
 });

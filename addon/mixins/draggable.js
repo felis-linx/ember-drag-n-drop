@@ -37,7 +37,7 @@ export default Ember.Mixin.create({
         this._x = value;
         this._scheduleApplyPosition();
       }
-    },
+    }
   }).volatile(),
 
   y: Ember.computed({
